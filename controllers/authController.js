@@ -11,7 +11,6 @@ const login = async (req, res) =>{
         
         const user = await User.findOne({ email })
         if(!user){
-            console.log(error.message);
             return res.status(404).json({success: false, error: "User Not Found"})
         }
 
@@ -23,15 +22,16 @@ const login = async (req, res) =>{
         // Token contains information about the user
         // and will be generated and passed only when authentication is successfull
         const token = jwt.sign({_id: user._id, role: user.role},
-            process.env.JWT_KEY, {expiresIn: "10d"}
+            "jwtSecretkeyofAqibJawedMJ@NB@AJ@AJ@AJ@ZJ1996", {expiresIn: "10d"}
         );
 
         return res.status(200).json({
             success: true, 
             token, 
-            user: {_id: user._id, name: user.name, role: user.role
-        }})
+            user: {_id: user._id, name: user.name, role: user.role}
+        })
     } catch(error) {
+        console.log(error.message);
         return res.status(500).json({success: false, error: error.message})
     }
 };
