@@ -2,20 +2,34 @@ import multer from "multer"
 import Employee from "../models/Employee.js"
 import User from "../models/User.js"
 import bcrypt from 'bcrypt'
-import path from "path"
-import Department from "../models/Department.js"
+import cloudinary from '../config/cloudinary.js'
+import { CloudinaryStorage } from 'multer-storage-cloudinary';
 
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, "public/uploads")
+// We cannot use this code because we cannot add files dynamically after deploying on vercel
+
+// import path from 'path'
+// const storage = multer.diskStorage({
+//     destination: (req, file, cb) => {
+//         cb(null, "public/uploads")
+//     },
+
+//     filename: (req, file, cb) => {
+//         cb(null, Date.now()+path.extname(file.originalname))
+//     }
+// })
+// const upload = multer({storage: storage})
+
+
+const storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'employee-Images', // Cloudinary folder name
+        allowed_formats: ['jpg', 'png', 'jpeg'],
+        public_id: (req, file) => Date.now() + '-' + file.originalname,
     },
+});
 
-    filename: (req, file, cb) => {
-        cb(null, Date.now()+path.extname(file.originalname))
-    }
-})
-
-const upload = multer({storage: storage})
+const upload = multer({ storage });
 
 const addEmployee = async (req, res)=>{
     try {
@@ -39,13 +53,15 @@ const addEmployee = async (req, res)=>{
         }
     
         const hashPassword = await bcrypt.hash(password, 10)
+
+        const profileImage = req.file ? req.file.path : '';
     
         const newUser = new User({
             name,
             email,
             password: hashPassword,
             role,
-            profileImage: req.file ? req.file.filename: " "
+            profileImage
         })
     
         const savedUser = await newUser.save()
